@@ -380,7 +380,6 @@
         <section id="scene5" class="scene" style="background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('https://i.postimg.cc/PrZT22NS/Gemini-Generated-Image-b2l2o2b2l2o2b2l2.png'); background-size: cover; background-position: center;">
             <div class="scene-content w-full">
                 <h2 class="text-3xl md:text-4xl font-bold title-primary">Una Estrategia de Apoyo: Potenciando los Pilares de ChileCompra</h2>
-                <p class="mt-4 text-lg md:text-xl leading-relaxed max-w-4xl mx-auto">Mi propuesta es poner los estudios y la inteligencia de datos al servicio de la Dirección y sus objetivos, para apoyar la implementación de la Nueva Ley de Compras en sus pilares fundamentales:</p>
                 
                 <div class="mt-12 w-full flex flex-col items-center">
                     <!-- Rol Central -->
@@ -454,7 +453,7 @@
                 
                 <div class="mt-12 border-t border-gray-300 pt-6 max-w-sm mx-auto">
                     <p class="text-lg font-bold text-gray-800">Esteban Molina</p>
-                    <p class="mt-1 text-sm text-gray-600">emolina@email.com  |  linkedin.com/in/estebanmolina</p>
+                    <p class="mt-1 text-sm text-gray-600">emolinasaez@gmail.com  |  linkedin.com/in/estebanmolinasaez</p>
                 </div>
             </div>
         </section>
@@ -813,33 +812,36 @@
                 }
             });
 
-            // Navegación por scroll en móvil
-            let lastScrollTime = 0;
-            document.addEventListener('wheel', (event) => {
+            // Navegación por toque en móvil
+            let lastTapTime = 0;
+            document.addEventListener('click', (event) => {
                 if (window.innerWidth >= 768) return; // Aplicar solo en pantallas tipo móvil
 
-                const now = new Date().getTime();
-                if (now - lastScrollTime < 500) { // Throttle para evitar saltos rápidos
-                    event.preventDefault();
+                // Ignorar clicks en elementos interactivos como la leyenda o botones
+                if (event.target.closest('.legend-item, button')) {
                     return;
                 }
 
-                if (event.deltaY > 10) { // Scroll hacia abajo
+                const now = new Date().getTime();
+                if (now - lastTapTime < 400) { // Throttle para evitar doble taps
                     event.preventDefault();
-                    lastScrollTime = now;
+                    return;
+                }
+                lastTapTime = now;
+                
+                // Avanzar al tocar en la mitad derecha, retroceder en la izquierda
+                if (event.clientX > window.innerWidth / 2) {
                     if (currentSceneIndex === 1 && scene2Step < scene2TotalSteps) { scene2Step++; updateScene2Animation(); }
                     else if (currentSceneIndex === 2 && scene3Step < scene3TotalSteps) { scene3Step++; updateScene3Animation(); }
                     else if (currentSceneIndex === 3 && scene4Step < scene4TotalSteps) { scene4Step++; updateScene4Animation(); }
                     else { navigateToScene(currentSceneIndex + 1); }
-                } else if (event.deltaY < -10) { // Scroll hacia arriba
-                    event.preventDefault();
-                    lastScrollTime = now;
+                } else {
                     if (currentSceneIndex === 1 && scene2Step > 0) { scene2Step--; updateScene2Animation(); }
                     else if (currentSceneIndex === 2 && scene3Step > 0) { scene3Step--; updateScene3Animation(); }
                     else if (currentSceneIndex === 3 && scene4Step > 0) { scene4Step--; updateScene4Animation(); }
                     else { navigateToScene(currentSceneIndex - 1); }
                 }
-            }, { passive: false });
+            });
 
             const scrollSyncObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
@@ -872,4 +874,6 @@
 
 </body>
 </html>
+
+
 
