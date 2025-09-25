@@ -2,7 +2,7 @@
 
 Esta es una presentación interactiva y dinámica creada como parte de un proceso de postulación para un rol de liderazgo en inteligencia de datos. La presentación está diseñada como una única página web que utiliza técnicas de "scrollytelling" para guiar al espectador a través de una narrativa.
 
-**Ver la presentación:** [**Enlace a la Presentación en Vivo**](https://[tu-usuario].github.io/[tu-repositorio]/) *(Reemplaza este enlace)*
+**Ver la presentación:** [**Enlace a la Presentación en Vivo**](https://emolinasaez.github.io/presentacion_chilecompra/) *(Reemplaza este enlace)*
 
 ---
 
