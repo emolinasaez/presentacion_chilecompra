@@ -262,7 +262,7 @@
         </section>
         
         <!-- ESCENA 3: Mi Experiencia (INTERACTIVA) -->
-        <section id="scene3" class="scene" style="background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('https://i.postimg.cc/PrZT22NS/Gemini-Generated-Image-b2l2o2b2l2o2b2l2.png'); background-size: cover; background-position: center;">
+        <section id="scene3" class="scene relative" style="background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('https://i.postimg.cc/PrZT22NS/Gemini-Generated-Image-b2l2o2b2l2o2b2l2.png'); background-size: cover; background-position: center;">
             <div class="scene-content w-full">
                 <h2 class="text-3xl md:text-4xl font-bold title-primary">Crecimiento Sostenido</h2>
                 <div class="mt-12 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12 w-full">
@@ -309,7 +309,7 @@
                             <h3 class="font-bold text-lg" style="color: var(--color-primary);">Principales Estudios 2025:</h3>
                             <ul class="mt-2 list-disc list-inside text-sm space-y-2">
                                 <li class="font-bold">Plataforma de Alertas en Tiempo Real</li>
-                                <li>Informe de Contingencia Nacional</li>
+                                <li>Cotiza tu asado</li>
                                 <li>Plataforma de Seguimiento de Crisis</li>
                             </ul>
                         </div>
@@ -330,64 +330,132 @@
                     </div>
                 </div>
             </div>
+            <div class="absolute bottom-8 right-8 text-center">
+                <img src="https://i.ibb.co/fYY6btBp/qr-estudios.png" alt="Código QR para ver detalle de estudios" class="w-24 h-24 mx-auto rounded-lg shadow-lg">
+                <p class="text-xs mt-2 font-semibold text-gray-700">ver detalle de estudios y proyectos</p>
+            </div>
         </section>
         
         <!-- ESCENA 4: Mi Liderazgo (INTERACTIVA - Game Changer) -->
-        <section id="scene4" class="scene" style="background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('https://i.postimg.cc/PrZT22NS/Gemini-Generated-Image-b2l2o2b2l2o2b2l2.png'); background-size: cover; background-position: center;">
+        <section id="scene4" class="scene relative" style="background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('https://i.postimg.cc/PrZT22NS/Gemini-Generated-Image-b2l2o2b2l2o2b2l2.png'); background-size: cover; background-position: center;">
             <div class="scene-content w-full">
                 <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold title-primary">Un Liderazgo que Empodera: De la Intuición a la Inteligencia de Impacto</h2>
                 
                 <div class="mt-8 flex flex-col lg:flex-row items-center gap-8">
-                    <!-- Contenedor del Gráfico D3.js -->
-                    <div id="chart-container" class="w-full lg:w-2/3 bg-white p-4 rounded-lg shadow-lg opacity-0" style="max-height: 60vh;">
-                        <svg id="chart"></svg>
+                    <!-- Contenedor del Gráfico y Caos -->
+                    <div class="w-full lg:w-2/3 h-[65vh] relative">
+                        <!-- "Antes": Caos de Ideas -->
+                        <div id="chaos-container" class="absolute inset-0 bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-lg opacity-0 transition-opacity duration-700">
+                            <div class="absolute p-3 bg-yellow-100 shadow-md rounded-sm transform -rotate-6" style="top: 15%; left: 20%;"><p class="text-sm">¿Canasta Menstrual?</p></div>
+                            <div class="absolute p-3 bg-blue-100 shadow-md rounded-sm transform rotate-3" style="top: 40%; left: 55%;"><p class="text-sm">Estudio Telecom</p></div>
+                            <div class="absolute p-3 bg-green-100 shadow-md rounded-sm transform rotate-2" style="top: 65%; left: 15%;"><p class="text-sm">Monitoreo Precios</p></div>
+                            <div class="absolute p-3 bg-pink-100 shadow-md rounded-sm transform -rotate-3" style="top: 5%; left: 60%;"><p class="text-sm">Ranking Proveedores</p></div>
+                            <div class="absolute p-3 bg-purple-100 shadow-md rounded-sm transform rotate-4" style="top: 70%; left: 65%;"><p class="text-sm">Análisis Cyber</p></div>
+                            <div class="absolute p-3 bg-yellow-100 shadow-md rounded-sm transform rotate-1" style="top: 35%; left: 5%;"><p class="text-sm">¿Impuesto Rosa?</p></div>
+                            <div class="absolute p-3 bg-green-100 shadow-md rounded-sm transform -rotate-2" style="top: 50%; left: 30%;"><p class="text-sm">Plataforma Alertas</p></div>
+                        </div>
+                        <!-- "Después": Gráfico Ordenado -->
+                        <div id="chart-container" class="w-full h-full bg-white p-4 rounded-lg shadow-lg opacity-0" style="max-height: 65vh;">
+                            <svg id="chart" style="width: 100%; height: 100%;"></svg>
+                        </div>
                     </div>
-                    
 
                     <!-- Narrativa Dinámica -->
                     <div class="w-full lg:w-1/3 text-base md:text-lg text-left h-64 relative">
-                        <p id="narrative-step1" class="narrative-text absolute inset-0">La transformación de mi unidad se basó en una herramienta estratégica: un <strong>Sistema de Valorización de Impacto (ROI)</strong>. Usando IA, analizamos variables para cada propuesta, permitiéndonos visualizar nuestro portafolio completo.</p>
-                        <p id="narrative-step2" class="narrative-text absolute inset-0">El análisis reveló cuatro arquetipos, desde los 'Agujeros Negros' a evitar, hasta nuestras iniciativas 'Quick Wins'. El objetivo se volvió evidente: <strong>concentrar el 80% del esfuerzo</strong> en el cuadrante de alto impacto.</p>
-                        <p id="narrative-step3" class="narrative-text absolute inset-0">Esta es una foto real de nuestro portafolio. La herramienta nos permitió priorizar y dar luz verde a proyectos clave como la <strong>Plataforma de Alertas</strong>. Pero el resultado más importante fue la conversación que generó.</p>
-                        <p id="narrative-step4" class="narrative-text absolute inset-0 font-bold text-xl" style="color: var(--color-primary);">El equipo dejó de debatir sobre gustos y empezó a preguntar: '¿Qué necesitamos para balancear los trabajos entre Quick Wins e Iniciativas Estratégicas?'. Ese es el tipo de liderazgo que traigo.</p>
+                        <p id="narrative-chaos" class="narrative-text absolute inset-0">"Este es el problema que teníamos: un mar de buenas ideas, pero sin un método claro para saber en cuáles invertir nuestros recursos limitados."</p>
+                        <p id="narrative-solution" class="narrative-text absolute inset-0">"Para solucionarlo, creamos una herramienta estratégica: un <strong>Sistema de Valorización de Impacto (ROI)</strong> que nos dio este mapa claro."</p>
+                        <p id="narrative-quadrants" class="narrative-text absolute inset-0">El análisis reveló cuatro arquetipos, desde los 'Agujeros Negros' a evitar, hasta nuestras iniciativas 'Quick Wins'. El objetivo se volvió evidente: <strong>concentrar el 80% del esfuerzo</strong> en el cuadrante de alto impacto.</p>
+                        <p id="narrative-portfolio" class="narrative-text absolute inset-0">Esta es una foto real de nuestro portafolio. La herramienta nos permitió priorizar y dar luz verde a proyectos clave como la <strong>Plataforma de Alertas</strong>. Pero el resultado más importante fue la conversación que generó.</p>
+                        <p id="narrative-leadership" class="narrative-text absolute inset-0 font-bold text-xl" style="color: var(--color-primary);">El equipo dejó de debatir sobre gustos y empezó a preguntar: '¿Qué necesitamos para balancear los trabajos entre Quick Wins e Iniciativas Estratégicas?'. Ese es el tipo de liderazgo que traigo: uno que usa la inteligencia de datos para elevar la conversación, mejorar la experiencia de los usuarios y apuntar a la gestión de excelencia que ChileCompra define en sus objetivos.</p>
                     </div>
                 </div>
             </div>
+            <div class="absolute bottom-8 right-8 text-center">
+                <img src="https://i.ibb.co/jkRNdVRw/Dise-o-sin-t-tulo.png" alt="Código QR para la metodología" class="w-24 h-24 mx-auto rounded-lg shadow-lg">
+                <p class="text-xs mt-2 font-semibold text-gray-700">para saber más sobre la metodología consulta acá</p>
+            </div>
         </section>
 
-        <!-- ESCENA 5: Mis Aportes -->
+        <!-- ESCENA 5: Nuestra Estrategia -->
         <section id="scene5" class="scene" style="background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('https://i.postimg.cc/PrZT22NS/Gemini-Generated-Image-b2l2o2b2l2o2b2l2.png'); background-size: cover; background-position: center;">
-            <div class="scene-content">
-                <h2 class="text-3xl md:text-4xl font-bold title-primary">Mi Visión: 3 Pilares para Potenciar a ChileCompra</h2>
-                <p class="mt-4 text-lg md:text-xl leading-relaxed">Una propuesta concreta para generar estudios estratégicos y de alto impacto.</p>
-                <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-                    <!-- Pilar 1 -->
-                    <div class="bg-white p-6 rounded-lg shadow-md border-t-4" style="border-color: var(--color-primary);">
-                        <h3 class="font-bold text-lg" style="color: var(--color-primary);">1. Estudios de Impacto y Probidad</h3>
-                        <p class="mt-2 text-sm">Nuestra prioridad será generar los estudios estratégicos que la Dirección necesita para medir el impacto de la Nueva Ley y optimizar convenios marco, usando la data como cimiento de evidencia sólida.</p>
+            <div class="scene-content w-full">
+                <h2 class="text-3xl md:text-4xl font-bold title-primary">Una Estrategia de Apoyo: Potenciando los Pilares de ChileCompra</h2>
+                <p class="mt-4 text-lg md:text-xl leading-relaxed max-w-4xl mx-auto">Mi propuesta es poner los estudios y la inteligencia de datos al servicio de la Dirección y sus objetivos, para apoyar la implementación de la Nueva Ley de Compras en sus pilares fundamentales:</p>
+                
+                <div class="mt-12 w-full flex flex-col items-center">
+                    <!-- Rol Central -->
+                    <div class="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-lg z-10">
+                        <h3 class="text-xl font-bold" style="color: var(--color-primary);">Estudios basados en Datos</h3>
                     </div>
-                    <!-- Pilar 2 -->
-                    <div class="bg-white p-6 rounded-lg shadow-md border-t-4" style="border-color: var(--color-primary);">
-                        <h3 class="font-bold text-lg" style="color: var(--color-primary);">2. Gobierno de Datos y Estudios Predictivos</h3>
-                        <p class="mt-2 text-sm">Seremos socios clave en formalizar un Gobierno de Datos. Sobre esa base, escalaremos el uso de IA para pasar de estudios descriptivos a modelos que alerten riesgos, como la distorsiones de mercado en compras publicas.</p>
+                    
+                    <!-- Flecha hacia abajo -->
+                    <div class="h-12 w-1 bg-gray-300 my-2"></div>
+
+                    <!-- Objetivo Central -->
+                    <div class="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-lg z-10">
+                        <h3 class="text-lg font-bold text-gray-700">Implementación Nueva Ley N° 19.886</h3>
                     </div>
-                    <!-- Pilar 3 -->
-                    <div class="bg-white p-6 rounded-lg shadow-md border-t-4" style="border-color: var(--color-primary);">
-                        <h3 class="font-bold text-lg" style="color: var(--color-primary);">3. Estudios Abiertos y un Equipo Referente</h3>
-                        <p class="mt-2 text-sm">La inteligencia generada será útil para todos. Impulsaremos visualizaciones y resúmenes para el ecosistema, desarrollando un equipo referente en comunicar estudios complejos de manera simple y efectiva.</p>
+
+                    <!-- Conectores a Pilares -->
+                    <div class="w-full h-12 flex justify-center relative">
+                        <div class="h-full w-1 bg-gray-300"></div>
+                        <div class="w-2/3 h-1 bg-gray-300 absolute bottom-0"></div>
+                    </div>
+
+                    <!-- Pilares -->
+                    <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-8 text-center relative">
+                        <!-- Conectores verticales -->
+                        <div class="absolute top-0 left-1/6 w-1 h-6 bg-gray-300 -translate-x-1/2"></div>
+                        <div class="absolute top-0 left-1/2 w-1 h-6 bg-gray-300 -translate-x-1/2"></div>
+                        <div class="absolute top-0 right-1/6 w-1 h-6 bg-gray-300 translate-x-1/2"></div>
+
+                        <!-- Pilar 1: Probidad -->
+                        <div class="bg-white/60 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/40 h-full">
+                            <h4 class="font-bold text-xl" style="color: var(--color-primary);">Probidad y Transparencia</h4>
+                            <p class="mt-2 text-sm text-gray-700">Aportar con modelos predictivos que ayuden a detectar riesgos y anomalías, para fortalecer el uso justo de los recursos públicos.</p>
+                        </div>
+
+                        <!-- Pilar 2: Eficiencia -->
+                        <div class="bg-white/60 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/40 h-full">
+                            <h4 class="font-bold text-xl" style="color: var(--color-primary);">Eficiencia e Innovación</h4>
+                            <p class="mt-2 text-sm text-gray-700">Apoyar la optimización de Convenios Marco y licitaciones mediante análisis de IA, con el fin de generar ahorros medibles y fomentar la innovación.</p>
+                        </div>
+
+                        <!-- Pilar 3: Participación -->
+                        <div class="bg-white/60 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/40 h-full">
+                            <h4 class="font-bold text-xl" style="color: var(--color-primary);">Participación y Colaboración</h4>
+                            <p class="mt-2 text-sm text-gray-700">Apoyar la mejora continua de las plataformas de datos abiertos, enriqueciéndolas con visualizaciones que empoderen a la sociedad civil, compradores, socios estratégicos y a los proveedores.</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- ESCENA 6: El Cierre -->
+        <!-- ESCENA 6: Llamado a la Acción -->
         <section id="scene6" class="scene" style="background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('https://i.postimg.cc/PrZT22NS/Gemini-Generated-Image-b2l2o2b2l2o2b2l2.png'); background-size: cover; background-position: center;">
-            <div class="scene-content">
-                <h2 class="text-3xl md:text-4xl font-bold title-primary">Construyendo Juntos el Futuro</h2>
-                <p class="mt-4 text-lg md:text-xl leading-relaxed">Mi trayectoria demuestra cómo potenciar estudios con inteligencia de datos para generar un impacto real.</p>
-                 <p class="mt-6 text-base md:text-lg text-left bg-white p-6 rounded-lg shadow-md border-l-4" style="border-color: var(--color-primary);">
-                    "Vengo a ejecutar una visión donde cada análisis fortalezca a ChileCompra, construyendo sobre las excelentes bases que ustedes ya han establecido. Y estoy listo para unirme a ustedes para liderar este equipo desde el primer día."
-                </p>
+            <div class="scene-content text-center">
+                <!-- Logo Conceptual -->
+                <div class="relative w-40 h-40 mx-auto" style="color: var(--color-primary);">
+                    <!-- Círculo exterior -->
+                    <svg class="absolute inset-0" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="48" stroke="currentColor" stroke-width="2"></circle>
+                    </svg>
+                    <!-- Icono de Brújula -->
+                    <svg class="absolute inset-0 transform scale-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 16l-1.88-1.88a4.5 4.5 0 010-6.24l6.24-6.24a4.5 4.5 0 016.24 0l1.88 1.88M8 16l-4 4m4-4l4-4m2 2l4 4m-4-4l-4-4"></path>
+                    </svg>
+                     <!-- Icono de Gráfico -->
+                    <svg class="absolute inset-0 transform scale-50 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
+                    </svg>
+                </div>
+
+                <h2 class="mt-8 text-4xl md:text-5xl font-bold title-primary">La Brújula para un Mercado Público Confiable</h2>
+                
+                <div class="mt-12 border-t border-gray-300 pt-6 max-w-sm mx-auto">
+                    <p class="text-lg font-bold text-gray-800">Esteban Molina</p>
+                    <p class="mt-1 text-sm text-gray-600">emolina@email.com  |  linkedin.com/in/estebanmolina</p>
+                </div>
             </div>
         </section>
 
@@ -479,7 +547,7 @@
             let isScrolling = false;
             
             let scene2Step = 0, scene3Step = 0, scene4Step = 0;
-            const scene2TotalSteps = 5, scene3TotalSteps = 4, scene4TotalSteps = 4;
+            const scene2TotalSteps = 5, scene3TotalSteps = 4, scene4TotalSteps = 5; // Updated scene4TotalSteps
 
             const progressHeader = document.getElementById('progress-header');
             const menuItems = document.querySelectorAll('.menu-item');
@@ -500,9 +568,13 @@
                 recognitionBox: document.getElementById('recognition-box'),
             };
             const scene4Elements = {
+                chaosContainer: document.getElementById('chaos-container'),
                 chartContainer: document.getElementById('chart-container'),
-                narrativeStep1: document.getElementById('narrative-step1'), narrativeStep2: document.getElementById('narrative-step2'),
-                narrativeStep3: document.getElementById('narrative-step3'), narrativeStep4: document.getElementById('narrative-step4'),
+                narrativeChaos: document.getElementById('narrative-chaos'),
+                narrativeSolution: document.getElementById('narrative-solution'),
+                narrativeQuadrants: document.getElementById('narrative-quadrants'),
+                narrativePortfolio: document.getElementById('narrative-portfolio'),
+                narrativeLeadership: document.getElementById('narrative-leadership'),
             };
 
             const updateScene2Animation = () => {
@@ -537,7 +609,7 @@
                 
                 const tooltip = d3.select("#tooltip");
                 let width = parseInt(container.node().getBoundingClientRect().width);
-                let height = width * 0.8; 
+                let height = Math.min(width * 0.8, window.innerHeight * 0.6); 
 
                 const margin = { top: 30, right: 180, bottom: 60, left: 70 };
                 const innerWidth = width - margin.left - margin.right;
@@ -677,26 +749,35 @@
             };
 
             const updateScene4Animation = () => {
-                scene4Elements.narrativeStep1.classList.toggle('visible', scene4Step === 1);
-                scene4Elements.narrativeStep2.classList.toggle('visible', scene4Step === 2);
-                scene4Elements.narrativeStep3.classList.toggle('visible', scene4Step === 3);
-                scene4Elements.narrativeStep4.classList.toggle('visible', scene4Step === 4);
-                
-                if (scene4Elements.chartContainer) {
-                    scene4Elements.chartContainer.style.opacity = scene4Step >= 1 ? '1' : '0';
+                // Step 1: Show chaos
+                if (scene4Elements.chaosContainer) {
+                    scene4Elements.chaosContainer.style.opacity = scene4Step === 1 ? '1' : '0';
                 }
+                scene4Elements.narrativeChaos.classList.toggle('visible', scene4Step === 1);
 
+                // Step 2: Transition to solution
+                if (scene4Elements.chartContainer) {
+                    scene4Elements.chartContainer.style.opacity = scene4Step >= 2 ? '1' : '0';
+                }
+                scene4Elements.narrativeSolution.classList.toggle('visible', scene4Step === 2);
+
+                // Step 3: Explain quadrants
                 const chart = d3.select("#chart");
-                chart.selectAll(".quadrant-bg, .quadrant-label").transition().duration(800).style("opacity", scene4Step >= 2 ? 1 : 0);
+                chart.selectAll(".quadrant-bg, .quadrant-label").transition().duration(800).style("opacity", scene4Step >= 3 ? 1 : 0);
+                scene4Elements.narrativeQuadrants.classList.toggle('visible', scene4Step === 3);
                 
-                if (scene4Step >= 3) {
+                // Step 4: Show portfolio
+                if (scene4Step >= 4) {
                     chart.selectAll("circle.data-point")
                         .transition().duration(1000).delay((d,i) => i * 15).attr("opacity", 0.8);
                 } else {
                     chart.selectAll("circle.data-point").attr("opacity", 0);
                 }
-                
-                chart.select("#point-uim0041").classed("highlight", scene4Step === 3);
+                chart.select("#point-uim0041").classed("highlight", scene4Step === 4);
+                scene4Elements.narrativePortfolio.classList.toggle('visible', scene4Step === 4);
+
+                // Step 5: Leadership statement
+                scene4Elements.narrativeLeadership.classList.toggle('visible', scene4Step === 5);
             };
             
             const navigateToScene = (index) => {
