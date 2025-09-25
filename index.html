@@ -813,33 +813,36 @@
                 }
             });
 
-            // Navegación por scroll en móvil
-            let lastScrollTime = 0;
-            document.addEventListener('wheel', (event) => {
+            // Navegación por toque en móvil
+            let lastTapTime = 0;
+            document.addEventListener('click', (event) => {
                 if (window.innerWidth >= 768) return; // Aplicar solo en pantallas tipo móvil
 
-                const now = new Date().getTime();
-                if (now - lastScrollTime < 500) { // Throttle para evitar saltos rápidos
-                    event.preventDefault();
+                // Ignorar clicks en elementos interactivos como la leyenda o botones
+                if (event.target.closest('.legend-item, button')) {
                     return;
                 }
 
-                if (event.deltaY > 10) { // Scroll hacia abajo
+                const now = new Date().getTime();
+                if (now - lastTapTime < 400) { // Throttle para evitar doble taps
                     event.preventDefault();
-                    lastScrollTime = now;
+                    return;
+                }
+                lastTapTime = now;
+                
+                // Avanzar al tocar en la mitad derecha, retroceder en la izquierda
+                if (event.clientX > window.innerWidth / 2) {
                     if (currentSceneIndex === 1 && scene2Step < scene2TotalSteps) { scene2Step++; updateScene2Animation(); }
                     else if (currentSceneIndex === 2 && scene3Step < scene3TotalSteps) { scene3Step++; updateScene3Animation(); }
                     else if (currentSceneIndex === 3 && scene4Step < scene4TotalSteps) { scene4Step++; updateScene4Animation(); }
                     else { navigateToScene(currentSceneIndex + 1); }
-                } else if (event.deltaY < -10) { // Scroll hacia arriba
-                    event.preventDefault();
-                    lastScrollTime = now;
+                } else {
                     if (currentSceneIndex === 1 && scene2Step > 0) { scene2Step--; updateScene2Animation(); }
                     else if (currentSceneIndex === 2 && scene3Step > 0) { scene3Step--; updateScene3Animation(); }
                     else if (currentSceneIndex === 3 && scene4Step > 0) { scene4Step--; updateScene4Animation(); }
                     else { navigateToScene(currentSceneIndex - 1); }
                 }
-            }, { passive: false });
+            });
 
             const scrollSyncObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
