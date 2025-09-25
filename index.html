@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estudios que Transforman - Presentación Mejorada</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+    <!-- D3.js for Charting -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <!-- Custom Stylesheet -->
+    <style>
+        /* Guía de Estilo y Colores */
+        :root {
+            --color-primary: #003366; /* Azul Institucional */
+            --color-text: #333333; /* Gris Grafito */
+            --color-background: #FFFFFF; /* Fondo Blanco */
+            --color-accent: #D32F2F; /* Rojo de Acento */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-text);
+            scroll-behavior: smooth;
+        }
+
+        /* Estilo para los títulos principales */
+        .title-primary {
+            color: var(--color-primary);
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Clases para tipografía fluida */
+        .font-responsive-title { font-size: clamp(2.5rem, 8vw, 6rem); line-height: 1.1; }
+        .font-responsive-subtitle { font-size: clamp(1.1rem, 4vw, 1.5rem); }
+
+        /* Contenedor de cada escena */
+        .scene {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 2rem;
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 1s ease-out, transform 1s ease-out;
+            will-change: opacity, transform;
+        }
+
+        .scene.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .scene-content {
+            max-width: 1100px; /* Aumentado para el gráfico */
+            margin: auto;
+            text-align: center;
+        }
+
+        /* Animación para el indicador de scroll */
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+        .scroll-indicator { animation: bounce 2s infinite; }
+
+        /* ESTILOS PARA EL MENÚ DE NAVEGACIÓN */
+        .menu-item {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            padding-bottom: 4px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .menu-item:hover { color: var(--color-primary); }
+        .menu-item.active { color: var(--color-primary); border-color: var(--color-primary); }
+
+        /* ESTILOS PARA ELEMENTOS INTERACTIVOS */
+        .interactive-step {
+            opacity: 0;
+            transition: opacity 0.7s ease-in-out;
+        }
+        .interactive-step.visible { opacity: 1; }
+
+        .narrative-text {
+            opacity: 0;
+            transform: translateY(15px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .narrative-text.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #bridge-line-container {
+            transition: width 1s ease-in-out;
+            width: 0%;
+        }
+        #bridge-line-container.visible { width: 100%; }
+        .bar { transition: background-color 0.5s ease; }
+        .bar.bar-active { background-color: var(--color-primary); }
+
+        /* --- ESTILOS MEJORADOS PARA GRÁFICO D3.js --- */
+        #chart-container {
+            transition: opacity 1s ease-in-out;
+        }
+        #tooltip {
+            position: absolute;
+            text-align: left;
+            padding: 12px;
+            font-size: 14px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            max-width: 300px;
+            z-index: 50;
+        }
+        .tooltip-title { font-weight: bold; font-size: 16px; margin-bottom: 8px; color: var(--color-primary); }
+        .tooltip-item { margin-bottom: 4px; }
+        .tooltip-label { font-weight: 600; }
+        
+        .axis path, .axis line { stroke: #D1D5DB; }
+        .axis text { fill: #6B7280; font-size: 12px; }
+        .grid-line { stroke: #E5E7EB; stroke-opacity: 0.7; shape-rendering: crispEdges; stroke-dasharray: 2,2; }
+        
+        .quadrant-bg { transition: opacity 0.8s ease-in-out; }
+        .quadrant-label { font-size: 14px; font-weight: 700; fill: #fff; text-anchor: middle; pointer-events: none; transition: opacity 0.8s ease-in-out; }
+
+        .legend-item { cursor: pointer; transition: opacity 0.3s ease; }
+        .legend-item.unfocused { opacity: 0.4; }
+        
+        circle.data-point { transition: opacity 0.3s ease, r 0.3s ease; }
+        circle.data-point.unfocused { opacity: 0.15; }
+        circle.data-point.highlight {
+            stroke: #f59e0b;
+            stroke-width: 4px;
+            r: 10;
+        }
+
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header de Progreso como Menú -->
+    <header id="progress-header" class="fixed top-0 left-0 w-full z-40 opacity-0 transition-opacity duration-500 bg-white/80 backdrop-blur-sm border-b border-gray-200/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex justify-between items-center">
+            <h3 class="hidden sm:block text-base font-bold" style="color: var(--color-primary);">Estudios que Transforman</h3>
+            <nav>
+                <ul id="progress-menu" class="flex space-x-4 sm:space-x-6">
+                    <li data-scene-index="1" class="menu-item">Desafío</li>
+                    <li data-scene-index="2" class="menu-item">Experiencia</li>
+                    <li data-scene-index="3" class="menu-item">Liderazgo</li>
+                    <li data-scene-index="4" class="menu-item">Visión</li>
+                    <li data-scene-index="5" class="menu-item">Cierre</li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Botón de Pantalla Completa -->
+    <button id="fullscreen-btn" class="fixed top-4 right-4 z-50 p-3 bg-white/70 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors focus:outline-none">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-700">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+        </svg>
+    </button>
+
+    <main id="presentation-container">
+        <!-- ESCENA 1: El Punto de Partida (El Gancho) -->
+        <section id="scene1" class="scene is-visible relative flex flex-col justify-center items-center text-center overflow-hidden" 
+                 style="background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('https://i.postimg.cc/PrZT22NS/Gemini-Generated-Image-b2l2o2b2l2o2b2l2.png'); background-size: cover; background-position: center;">
+            
+            <div class="absolute top-4 right-4 md:top-8 md:right-8">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/7/77/Logotipo_Direcci%C3%B3n_de_Compras_y_Contrataci%C3%B3n_P%C3%BAblica_%28ChileCompra%29.jpg" alt="Logo ChileCompra" class="w-28 md:w-40 h-auto object-contain rounded-lg shadow-[0_0_15px_rgba(0,51,102,0.4)] border border-white/30">
+            </div>
+            <div class="w-full px-4">
+                <h1 class="title-primary font-black font-responsive-title">Estudios que Transforman</h1>
+                <p class="mt-4 max-w-2xl mx-auto font-light text-gray-600 font-responsive-subtitle">Potenciando la Política de Compras con Inteligencia de Datos</p>
+                <img src="https://i.postimg.cc/VkZcGnfG/Gemini-Generated-Image-bu3seebu3seebu3s-removebg-preview.png" alt="Logo Inteligencia de Datos" class="mt-8 mx-auto w-32 h-32 md:w-48 md:h-48 object-contain">
+            </div>
+            <div class="absolute bottom-4 left-4 right-4 md:bottom-8 md:left-8 md:right-8 text-xs md:text-sm text-gray-500">
+                <div class="relative w-full h-full flex justify-between items-end">
+                    <div class="text-left max-w-[33%]">
+                        <p class="font-bold" style="color: var(--color-primary);">Presentación para la Dirección de Compras y Contratación Pública</p>
+                    </div>
+                    <div class="absolute left-1/2 -translate-x-1/2 bottom-0 whitespace-nowrap">
+                        <p>Septiembre de 2025</p>
+                    </div>
+                    <div class="text-right max-w-[33%]">
+                        <p>Esteban Molina</p>
+                    </div>
+                </div>
+            </div>
+            <div class="scroll-indicator absolute bottom-24 left-1/2 -translate-x-1/2 flex flex-col items-center space-y-1 opacity-70">
+                <span class="text-xs font-semibold" style="color: var(--color-primary);">SCROLL</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-primary);"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></svg>
+            </div>
+        </section>
+
+        <!-- ESCENA 2: El Desafío Central (INTERACTIVA) -->
+        <section id="scene2" class="scene" style="background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('https://i.postimg.cc/PrZT22NS/Gemini-Generated-Image-b2l2o2b2l2o2b2l2.png'); background-size: cover; background-position: center;">
+            <div class="scene-content w-full">
+                <h2 class="text-3xl md:text-4xl font-bold title-primary">La Ley da el marco para la estrategia. La inteligencia de datos es el engranaje para ejecutarla.</h2>
+                <div class="mt-12 flex flex-col md:flex-row items-center md:items-start justify-center gap-4">
+                    <div id="box-ley" class="interactive-step bg-white p-4 rounded-lg shadow-lg border-2 border-gray-300 text-center w-full max-w-xs md:w-52">
+                        <h3 class="font-bold" style="color: var(--color-primary);">NUEVA LEY DE COMPRAS</h3>
+                        <p class="text-xs text-gray-500 mt-1">Probidad, Eficiencia, Participación</p>
+                    </div>
+                    <div class="flex-grow relative md:h-24 flex flex-col items-center justify-start pt-4 w-full md:w-auto">
+                         <div id="bridge-line-container" class="hidden md:block absolute left-0 top-6 w-full h-2 rounded-full" style="background-color: var(--color-primary);"></div>
+                         <div id="bridge-text" class="interactive-step relative z-10 bg-white px-3 py-1 rounded-full shadow-md text-sm font-bold" style="color: var(--color-primary);">INTELIGENCIA DE DATOS</div>
+                         <div id="bridge-pillars" class="interactive-step md:absolute md:top-12 flex flex-col md:flex-row items-start md:items-center md:justify-around w-full mt-4 md:mt-2 space-y-3 md:space-y-0">
+                             <div class="flex items-center space-x-1.5 text-xs font-semibold" style="color: var(--color-primary);">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                                 <span>Gobierno de Datos</span>
+                             </div>
+                             <div class="flex items-center space-x-1.5 text-xs font-semibold" style="color: var(--color-primary);">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                 <span>Metodología Robusta</span>
+                            </div>
+                             <div class="flex items-center space-x-1.5 text-xs font-semibold" style="color: var(--color-primary);">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                                 <span>Modelos Predictivos</span>
+                             </div>
+                             <div class="flex items-center space-x-1.5 text-xs font-semibold" style="color: var(--color-primary);">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                                </svg>                                 
+                                 <span>Estudios de Impacto e insigths de alto valor</span>
+                             </div>
+                         </div>
+                    </div>
+                    <div id="box-decision" class="interactive-step bg-white p-4 rounded-lg shadow-lg border-2 border-gray-300 text-center w-full max-w-xs md:w-52">
+                        <h3 class="font-bold" style="color: var(--color-primary);">DECISIONES ESTRATÉGICAS</h3>
+                        <p class="text-xs text-gray-500 mt-1">Políticas Públicas, Estrategia, táctica y operaciones</p>
+                    </div>
+                </div>
+                <div class="mt-20 text-left max-w-3xl mx-auto space-y-4">
+                    <p id="bullet1" class="interactive-step text-lg flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3" style="color: var(--color-primary);"><path d="M4 17a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2.5a2.5 2.5 0 0 1 0 5c-.7 0-1.4-.3-2-.8"/><path d="M20 17a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2.5a2.5 2.5 0 0 0 0 5c.7 0 1.4-.3 2-.8"/><path d="M5 11.8A2.5 2.5 0 0 1 7.5 7H12v10H7.5a2.5 2.5 0 0 1-2.5-4.2Z"/><path d="M19 11.8a2.5 2.5 0 0 0-2.5-4.8H12v10h4.5a2.5 2.5 0 0 0 2.5-4.2Z"/></svg>
+                        Reconociendo y potenciando el camino ya iniciado.
+                    </p>
+                     <p id="bullet2" class="interactive-step text-lg flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3" style="color: var(--color-primary);"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                        <strong class="mr-2" style="color: var(--color-primary);">La Oportunidad:</strong> Pasar de la descripción a la anticipación.
+                    </p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- ESCENA 3: Mi Experiencia (INTERACTIVA) -->
+        <section id="scene3" class="scene" style="background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('https://i.postimg.cc/PrZT22NS/Gemini-Generated-Image-b2l2o2b2l2o2b2l2.png'); background-size: cover; background-position: center;">
+            <div class="scene-content w-full">
+                <h2 class="text-3xl md:text-4xl font-bold title-primary">Crecimiento Sostenido</h2>
+                <div class="mt-12 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12 w-full">
+                    <!-- Bar Chart -->
+                    <div class="w-full md:w-2/5 flex justify-around items-end h-64 border-b-2 border-gray-300 pb-2">
+                        <div class="flex flex-col items-center h-full justify-end">
+                            <div id="bar-2023" class="bar w-16 bg-gray-200 rounded-t-lg relative" style="height: 40%;">
+                                <span id="label-2023" class="interactive-step absolute top-2 left-0 right-0 text-white font-bold">16</span>
+                            </div>
+                            <span class="mt-2 font-bold text-gray-500">2023</span>
+                        </div>
+                        <div class="flex flex-col items-center h-full justify-end">
+                            <div id="bar-2024" class="bar w-16 bg-gray-200 rounded-t-lg relative" style="height: 65%;">
+                                <span id="label-2024" class="interactive-step absolute top-2 left-0 right-0 text-white font-bold">18</span>
+                            </div>
+                            <span class="mt-2 font-bold text-gray-500">2024</span>
+                        </div>
+                        <div class="flex flex-col items-center h-full justify-end">
+                            <div id="bar-2025" class="bar w-16 bg-gray-200 rounded-t-lg relative" style="height: 90%;">
+                                <span id="label-2025" class="interactive-step absolute top-2 left-0 right-0 text-white font-bold">19</span>
+                            </div>
+                            <span class="mt-2 font-bold text-gray-500">2025</span>
+                        </div>
+                    </div>
+                    <!-- Info Panel -->
+                    <div class="w-full md:w-3/5 h-64 relative text-left p-4">
+                        <div id="info-2023" class="interactive-step absolute inset-0 p-4">
+                            <h3 class="font-bold text-lg" style="color: var(--color-primary);">Principales Estudios 2023:</h3>
+                            <ul class="mt-2 list-disc list-inside text-sm space-y-2">
+                                <li>Costos de Canasta Menstrual</li>
+                                <li>Ranking Telecomunicaciones (c/ SUBTEL)</li>
+                                <li>Análisis "Viaje del Usuario" en Cyber</li>
+                            </ul>
+                        </div>
+                        <div id="info-2024" class="interactive-step absolute inset-0 p-4">
+                            <h3 class="font-bold text-lg" style="color: var(--color-primary);">Principales Estudios 2024:</h3>
+                            <ul class="mt-2 list-disc list-inside text-sm space-y-2">
+                                <li>Ranking de Proveedores "No Responde"</li>
+                                <li>Análisis de Daños por Cortes Eléctricos</li>
+                                <li>Estudio de Reclamos en Navidad</li>
+                            </ul>
+                        </div>
+                        <div id="info-2025" class="interactive-step absolute inset-0 p-4">
+                            <h3 class="font-bold text-lg" style="color: var(--color-primary);">Principales Estudios 2025:</h3>
+                            <ul class="mt-2 list-disc list-inside text-sm space-y-2">
+                                <li class="font-bold">Plataforma de Alertas en Tiempo Real</li>
+                                <li>Informe de Contingencia Nacional</li>
+                                <li>Plataforma de Seguimiento de Crisis</li>
+                            </ul>
+                        </div>
+                         <div id="recognition-box" class="interactive-step absolute inset-0 flex items-center justify-center p-4">
+                             <div class="bg-white p-6 rounded-lg shadow-xl border-l-4 border-yellow-500 w-full text-left">
+                                 <div class="flex items-start space-x-4">
+                                     <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-yellow-500 flex-shrink-0 mt-1"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                                     <div>
+                                         <h3 class="font-bold text-lg text-yellow-600">Ganador Concurso Banco Mundial & ICPEN (2025)</h3>
+                                         <p class="mt-2 text-sm font-semibold text-gray-700">Iniciativa Premiada:</p>
+                                         <p class="text-base text-gray-800">'Sistema de Alertas de Protección al Consumidor en Tiempo Real'</p>
+                                         <p class="mt-1 text-sm font-semibold text-gray-700">Categoría:</p>
+                                         <p class="text-base text-gray-800">'Iniciativas Innovadoras de Investigación de Mercado'</p>
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- ESCENA 4: Mi Liderazgo (INTERACTIVA - Game Changer) -->
+        <section id="scene4" class="scene" style="background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('https://i.postimg.cc/PrZT22NS/Gemini-Generated-Image-b2l2o2b2l2o2b2l2.png'); background-size: cover; background-position: center;">
+            <div class="scene-content w-full">
+                <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold title-primary">Un Liderazgo que Empodera: De la Intuición a la Inteligencia de Impacto</h2>
+                
+                <div class="mt-8 flex flex-col lg:flex-row items-center gap-8">
+                    <!-- Contenedor del Gráfico D3.js -->
+                    <div id="chart-container" class="w-full lg:w-2/3 bg-white p-4 rounded-lg shadow-lg opacity-0" style="max-height: 60vh;">
+                        <svg id="chart"></svg>
+                    </div>
+                    
+
+                    <!-- Narrativa Dinámica -->
+                    <div class="w-full lg:w-1/3 text-base md:text-lg text-left h-64 relative">
+                        <p id="narrative-step1" class="narrative-text absolute inset-0">La transformación de mi unidad se basó en una herramienta estratégica: un <strong>Sistema de Valorización de Impacto (ROI)</strong>. Usando IA, analizamos variables para cada propuesta, permitiéndonos visualizar nuestro portafolio completo.</p>
+                        <p id="narrative-step2" class="narrative-text absolute inset-0">El análisis reveló cuatro arquetipos, desde los 'Agujeros Negros' a evitar, hasta nuestras iniciativas 'Quick Wins'. El objetivo se volvió evidente: <strong>concentrar el 80% del esfuerzo</strong> en el cuadrante de alto impacto.</p>
+                        <p id="narrative-step3" class="narrative-text absolute inset-0">Esta es una foto real de nuestro portafolio. La herramienta nos permitió priorizar y dar luz verde a proyectos clave como la <strong>Plataforma de Alertas</strong>. Pero el resultado más importante fue la conversación que generó.</p>
+                        <p id="narrative-step4" class="narrative-text absolute inset-0 font-bold text-xl" style="color: var(--color-primary);">El equipo dejó de debatir sobre gustos y empezó a preguntar: '¿Qué necesitamos para balancear los trabajos entre Quick Wins e Iniciativas Estratégicas?'. Ese es el tipo de liderazgo que traigo.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ESCENA 5: Mis Aportes -->
+        <section id="scene5" class="scene" style="background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('https://i.postimg.cc/PrZT22NS/Gemini-Generated-Image-b2l2o2b2l2o2b2l2.png'); background-size: cover; background-position: center;">
+            <div class="scene-content">
+                <h2 class="text-3xl md:text-4xl font-bold title-primary">Mi Visión: 3 Pilares para Potenciar a ChileCompra</h2>
+                <p class="mt-4 text-lg md:text-xl leading-relaxed">Una propuesta concreta para generar estudios estratégicos y de alto impacto.</p>
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                    <!-- Pilar 1 -->
+                    <div class="bg-white p-6 rounded-lg shadow-md border-t-4" style="border-color: var(--color-primary);">
+                        <h3 class="font-bold text-lg" style="color: var(--color-primary);">1. Estudios de Impacto y Probidad</h3>
+                        <p class="mt-2 text-sm">Nuestra prioridad será generar los estudios estratégicos que la Dirección necesita para medir el impacto de la Nueva Ley y optimizar convenios marco, usando la data como cimiento de evidencia sólida.</p>
+                    </div>
+                    <!-- Pilar 2 -->
+                    <div class="bg-white p-6 rounded-lg shadow-md border-t-4" style="border-color: var(--color-primary);">
+                        <h3 class="font-bold text-lg" style="color: var(--color-primary);">2. Gobierno de Datos y Estudios Predictivos</h3>
+                        <p class="mt-2 text-sm">Seremos socios clave en formalizar un Gobierno de Datos. Sobre esa base, escalaremos el uso de IA para pasar de estudios descriptivos a modelos que alerten riesgos, como la distorsiones de mercado en compras publicas.</p>
+                    </div>
+                    <!-- Pilar 3 -->
+                    <div class="bg-white p-6 rounded-lg shadow-md border-t-4" style="border-color: var(--color-primary);">
+                        <h3 class="font-bold text-lg" style="color: var(--color-primary);">3. Estudios Abiertos y un Equipo Referente</h3>
+                        <p class="mt-2 text-sm">La inteligencia generada será útil para todos. Impulsaremos visualizaciones y resúmenes para el ecosistema, desarrollando un equipo referente en comunicar estudios complejos de manera simple y efectiva.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ESCENA 6: El Cierre -->
+        <section id="scene6" class="scene" style="background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('https://i.postimg.cc/PrZT22NS/Gemini-Generated-Image-b2l2o2b2l2o2b2l2.png'); background-size: cover; background-position: center;">
+            <div class="scene-content">
+                <h2 class="text-3xl md:text-4xl font-bold title-primary">Construyendo Juntos el Futuro</h2>
+                <p class="mt-4 text-lg md:text-xl leading-relaxed">Mi trayectoria demuestra cómo potenciar estudios con inteligencia de datos para generar un impacto real.</p>
+                 <p class="mt-6 text-base md:text-lg text-left bg-white p-6 rounded-lg shadow-md border-l-4" style="border-color: var(--color-primary);">
+                    "Vengo a ejecutar una visión donde cada análisis fortalezca a ChileCompra, construyendo sobre las excelentes bases que ustedes ya han establecido. Y estoy listo para unirme a ustedes para liderar este equipo desde el primer día."
+                </p>
+            </div>
+        </section>
+
+    </main><div id="tooltip" class="tooltip"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- DATOS INCRUSTADOS ---
+            const projectData = [
+                {"cod":"uim001","título":"monitoreo precios aerolineas tramo Santiago - Punta Arenas","L. RECURSOS INVERTIDOS":72.0,"ROI POTENCIAL":2.02375},
+                {"cod":"uim002","título":"Calculadora de costos escolares","L. RECURSOS INVERTIDOS":270.0,"ROI POTENCIAL":2.88666667},
+                {"cod":"uim0021","título":"Ranking Retail Inmobiliarias","L. RECURSOS INVERTIDOS":78.0,"ROI POTENCIAL":2.96708333},
+                {"cod":"uim003","título":"Cyber: viaje del usuario","L. RECURSOS INVERTIDOS":100.0,"ROI POTENCIAL":3.139375},
+                {"cod":"uim004","título":"Monitoreo Aguas y Matreriales de construcción","L. RECURSOS INVERTIDOS":38.0,"ROI POTENCIAL":2.821875},
+                {"cod":"uim005","título":"Ranking Telecomunicaciones SUBTEL","L. RECURSOS INVERTIDOS":194.0,"ROI POTENCIAL":3.34125},
+                {"cod":"uim006","título":"Costos de canastas menstruales","L. RECURSOS INVERTIDOS":40.0,"ROI POTENCIAL":3.86666667},
+                {"cod":"uim007","título":"Accesibilidad y Consumo","L. RECURSOS INVERTIDOS":254.0,"ROI POTENCIAL":2.41208333},
+                {"cod":"uim008","título":"Estudio de precios bioequivalentes","L. RECURSOS INVERTIDOS":320.0,"ROI POTENCIAL":2.436875},
+                {"cod":"uim009","título":"Impuesto rosa e impuesto azul infantil","L. RECURSOS INVERTIDOS":135.0,"ROI POTENCIAL":2.693125},
+                {"cod":"uim0010","título":"Canasta Diecieochera","L. RECURSOS INVERTIDOS":20.0,"ROI POTENCIAL":2.93166667},
+                {"cod":"uim0011","título":"Respuesta Favorable Incumplida","L. RECURSOS INVERTIDOS":137.0,"ROI POTENCIAL":2.89145833},
+                {"cod":"uim0012","título":"Calculadora menstrual","L. RECURSOS INVERTIDOS":134.0,"ROI POTENCIAL":3.17125},
+                {"cod":"uim0013","título":"Estudio de disfraces","L. RECURSOS INVERTIDOS":64.0,"ROI POTENCIAL":2.93520833},
+                {"cod":"uim0014","título":"Cookies","L. RECURSOS INVERTIDOS":122.0,"ROI POTENCIAL":2.42041667},
+                {"cod":"uim0015","título":"comercio electronico","L. RECURSOS INVERTIDOS":189.0,"ROI POTENCIAL":2.91625},
+                {"cod":"uim0016","título":"Ranking Proveedor No responde","L. RECURSOS INVERTIDOS":36.0,"ROI POTENCIAL":4.00125},
+                {"cod":"uim0017","título":"Radiografía transporte aéreo","L. RECURSOS INVERTIDOS":70.0,"ROI POTENCIAL":2.40041667},
+                {"cod":"uim0018","título":"Incendios Forestales","L. RECURSOS INVERTIDOS":90.0,"ROI POTENCIAL":2.799375},
+                {"cod":"uim0019","título":"Estudio de huevos de Chocolates","L. RECURSOS INVERTIDOS":12.0,"ROI POTENCIAL":2.53854167},
+                {"cod":"uim0020","título":"Análisis de resupuestas de mercado libre","L. RECURSOS INVERTIDOS":68.0,"ROI POTENCIAL":2.76875},
+                {"cod":"uim0022","título":"Accesibilidad eventos Masivos","L. RECURSOS INVERTIDOS":44.0,"ROI POTENCIAL":2.01083333},
+                {"cod":"uim0023","título":"Análisis de Comparativo de Inversión de Publicidad: Día de la Madre versus Día del Padre.","L. RECURSOS INVERTIDOS":10.0,"ROI POTENCIAL":2.58458333},
+                {"cod":"uim0024","título":"Genero y consumo","L. RECURSOS INVERTIDOS":110.0,"ROI POTENCIAL":2.30708333},
+                {"cod":"uim0025","título":"Reclamos Adultos mayores datos por región","L. RECURSOS INVERTIDOS":9.0,"ROI POTENCIAL":2.29416667},
+                {"cod":"uim0026","título":"Due Dilligence","L. RECURSOS INVERTIDOS":54.0,"ROI POTENCIAL":2.55625},
+                {"cod":"uim0027","título":"Estudio de caso: reclamos por precios durante el Cyber Day 2024”","L. RECURSOS INVERTIDOS":21.0,"ROI POTENCIAL":2.16666667},
+                {"cod":"uim0028","título":"Canasta 18 septiembre","L. RECURSOS INVERTIDOS":75.0,"ROI POTENCIAL":3.04145833},
+                {"cod":"uim0029","título":"Costo de viajes a destinos turísticos nacionales","L. RECURSOS INVERTIDOS":4.0,"ROI POTENCIAL":2.51375},
+                {"cod":"uim0030","título":"Uso de Anticonceptivos","L. RECURSOS INVERTIDOS":202.0,"ROI POTENCIAL":2.693125},
+                {"cod":"uim0031","título":"Apoyo análisis de daño cortes eléctricos agosto 2024","L. RECURSOS INVERTIDOS":96.0,"ROI POTENCIAL":3.93625},
+                {"cod":"uim0032","título":"Accesibilidad web empresas","L. RECURSOS INVERTIDOS":432.0,"ROI POTENCIAL":2.35895833},
+                {"cod":"uim0033","título":"Análisis de reclamos Navidad","L. RECURSOS INVERTIDOS":6.0,"ROI POTENCIAL":3.19375},
+                {"cod":"uim0034","título":"Canasta Fin de Año","L. RECURSOS INVERTIDOS":48.0,"ROI POTENCIAL":2.892708333},
+                {"cod":"uim0035","título":"Ranking Educación Superior","L. RECURSOS INVERTIDOS":30.0,"ROI POTENCIAL":3.27875},
+                {"cod":"uim0036","título":"Costo de canastas menstruales 2024","L. RECURSOS INVERTIDOS":66.0,"ROI POTENCIAL":2.799375},
+                {"cod":"uim0037","título":"Escolares 2025","L. RECURSOS INVERTIDOS":80.0,"ROI POTENCIAL":2.87375},
+                {"cod":"uim0038","título":"Informe de contingencia por apagón nacional","L. RECURSOS INVERTIDOS":30.0,"ROI POTENCIAL":3.85604167},
+                {"cod":"uim0039","título":"Informe contingencia cancelación Shakira","L. RECURSOS INVERTIDOS":9.0,"ROI POTENCIAL":2.51020833},
+                {"cod":"uim0040","título":"Solicitud enel para calculo de compensaciones","L. RECURSOS INVERTIDOS":19.0,"ROI POTENCIAL":2.57041667},
+                {"cod":"uim0041","título":"Plataforma de alertas","L. RECURSOS INVERTIDOS":36.0,"ROI POTENCIAL":4.01541667},
+                {"cod":"uim0042","título":"Informes automáticos de reclamos","L. RECURSOS INVERTIDOS":22.0,"ROI POTENCIAL":3.27875},
+                {"cod":"uim0043","título":"Aspectos Metodológicos mi poder de compra","L. RECURSOS INVERTIDOS":524.0,"ROI POTENCIAL":2.61395833},
+                {"cod":"uim0044","título":"plataforma calculadora de viajes semana santa","L. RECURSOS INVERTIDOS":45.0,"ROI POTENCIAL":3.55854167},
+                {"cod":"uim0045","título":"Análisis de reclamos de semana santa y viajes","L. RECURSOS INVERTIDOS":8.0,"ROI POTENCIAL":2.6625},
+                {"cod":"uim0046","título":"estudio black friday 2024","L. RECURSOS INVERTIDOS":408.0,"ROI POTENCIAL":2.64583333},
+                {"cod":"uim0047","título":"Estudio Plataformas de streaming","L. RECURSOS INVERTIDOS":416.0,"ROI POTENCIAL":2.85479167},
+                {"cod":"uim0048","título":"Plataforma de seguimiento de contingencias","L. RECURSOS INVERTIDOS":15.0,"ROI POTENCIAL":3.6825},
+                {"cod":"uim0049","título":"Colaciones escolares","L. RECURSOS INVERTIDOS":78.0,"ROI POTENCIAL":2.53375},
+                {"cod":"uim0050","título":"Cotizador 18: cotiza tu asado","L. RECURSOS INVERTIDOS":54.0,"ROI POTENCIAL":4.497083333},
+                {"cod":"uim0051","título":"Documento de trabajo: analisis por cobros empresas eléctricas","L. RECURSOS INVERTIDOS":null,"ROI POTENCIAL":null}
+            ];
+            
+            // --- Funcionalidad de Pantalla Completa ---
+            const fullscreenBtn = document.getElementById('fullscreen-btn');
+            fullscreenBtn.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => console.error(err));
+                } else {
+                    document.exitFullscreen();
+                }
+            });
+
+            // --- Lógica de Scrollytelling con Intersection Observer ---
+            const scenes = document.querySelectorAll('.scene');
+            const observerOptions = { root: null, rootMargin: '0px', threshold: 0.4 };
+
+            const animationObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                    }
+                });
+            }, observerOptions);
+
+            scenes.forEach(scene => animationObserver.observe(scene));
+
+            // --- Lógica de Navegación General y Animaciones ---
+            let currentSceneIndex = 0;
+            let isScrolling = false;
+            
+            let scene2Step = 0, scene3Step = 0, scene4Step = 0;
+            const scene2TotalSteps = 5, scene3TotalSteps = 4, scene4TotalSteps = 4;
+
+            const progressHeader = document.getElementById('progress-header');
+            const menuItems = document.querySelectorAll('.menu-item');
+            
+            const scene2Elements = {
+                boxLey: document.getElementById('box-ley'),
+                boxDecision: document.getElementById('box-decision'),
+                bridgeLine: document.getElementById('bridge-line-container'),
+                bridgeText: document.getElementById('bridge-text'),
+                bridgePillars: document.getElementById('bridge-pillars'),
+                bullet1: document.getElementById('bullet1'),
+                bullet2: document.getElementById('bullet2'),
+            };
+            const scene3Elements = {
+                bar2023: document.getElementById('bar-2023'), bar2024: document.getElementById('bar-2024'), bar2025: document.getElementById('bar-2025'),
+                label2023: document.getElementById('label-2023'), label2024: document.getElementById('label-2024'), label2025: document.getElementById('label-2025'),
+                info2023: document.getElementById('info-2023'), info2024: document.getElementById('info-2024'), info2025: document.getElementById('info-2025'),
+                recognitionBox: document.getElementById('recognition-box'),
+            };
+            const scene4Elements = {
+                chartContainer: document.getElementById('chart-container'),
+                narrativeStep1: document.getElementById('narrative-step1'), narrativeStep2: document.getElementById('narrative-step2'),
+                narrativeStep3: document.getElementById('narrative-step3'), narrativeStep4: document.getElementById('narrative-step4'),
+            };
+
+            const updateScene2Animation = () => {
+                scene2Elements.boxLey.classList.toggle('visible', scene2Step >= 1);
+                scene2Elements.boxDecision.classList.toggle('visible', scene2Step >= 1);
+                scene2Elements.bridgeLine.classList.toggle('visible', scene2Step >= 2);
+                if (scene2Step >= 2) { setTimeout(() => scene2Elements.bridgeText.classList.add('visible'), 800); } 
+                else { scene2Elements.bridgeText.classList.remove('visible'); }
+                scene2Elements.bridgePillars.classList.toggle('visible', scene2Step >= 3);
+                scene2Elements.bullet1.classList.toggle('visible', scene2Step >= 4);
+                scene2Elements.bullet2.classList.toggle('visible', scene2Step >= 5);
+            };
+
+            const updateScene3Animation = () => {
+                scene3Elements.bar2023.classList.toggle('bar-active', scene3Step >= 1);
+                scene3Elements.bar2024.classList.toggle('bar-active', scene3Step >= 2);
+                scene3Elements.bar2025.classList.toggle('bar-active', scene3Step >= 3);
+                scene3Elements.label2023.classList.toggle('visible', scene3Step >= 1);
+                scene3Elements.label2024.classList.toggle('visible', scene3Step >= 2);
+                scene3Elements.label2025.classList.toggle('visible', scene3Step >= 3);
+                scene3Elements.info2023.classList.toggle('visible', scene3Step === 1);
+                scene3Elements.info2024.classList.toggle('visible', scene3Step === 2);
+                scene3Elements.info2025.classList.toggle('visible', scene3Step === 3);
+                scene3Elements.recognitionBox.classList.toggle('visible', scene3Step === 4);
+            };
+            
+            const renderD3Chart = () => {
+                const container = d3.select("#chart-container");
+                if (container.node().getBoundingClientRect().width === 0) return;
+                
+                container.select("svg").html(""); 
+                
+                const tooltip = d3.select("#tooltip");
+                let width = parseInt(container.node().getBoundingClientRect().width);
+                let height = width * 0.8; 
+
+                const margin = { top: 30, right: 180, bottom: 60, left: 70 };
+                const innerWidth = width - margin.left - margin.right;
+                const innerHeight = height - margin.top - margin.bottom;
+
+                const svg = d3.select("#chart")
+                    .attr("viewBox", `0 0 ${width} ${height}`)
+                    .attr("preserveAspectRatio", "xMidYMid meet");
+
+                const g = svg.append("g")
+                    .attr("transform", `translate(${margin.left},${margin.top})`);
+                
+                const cleanData = projectData.filter(d => 
+                    d["L. RECURSOS INVERTIDOS"] != null && !isNaN(d["L. RECURSOS INVERTIDOS"]) &&
+                    d["ROI POTENCIAL"] != null && !isNaN(d["ROI POTENCIAL"]) &&
+                    d["L. RECURSOS INVERTIDOS"] <= 500
+                );
+
+                const medianEsfuerzo = d3.median(cleanData, d => d["L. RECURSOS INVERTIDOS"]);
+                const medianValor = d3.median(cleanData, d => d["ROI POTENCIAL"]);
+
+                const categories = {
+                    "Iniciativas Estratégicas": { label: "Iniciativas Estratégicas", color: "#2563eb", bg: "#2563eb33" }, // Azul
+                    "Quick Wins": { label: "Quick Wins", color: "#16a34a", bg: "#16a34a33" }, // Verde
+                    "Proyectos Complementarios": { label: "Proyectos Comp.", color: "#6b7280", bg: "#6b728033" }, // Gris
+                    "Agujeros Negros": { label: "Agujeros Negros", color: "#dc2626", bg: "#dc262633" }  // Rojo
+                };
+                
+                function getProjectCategory(d) {
+                    const altoValor = d["ROI POTENCIAL"] >= medianValor;
+                    const altoEsfuerzo = d["L. RECURSOS INVERTIDOS"] >= medianEsfuerzo;
+                    if (altoValor && !altoEsfuerzo) return "Quick Wins";
+                    // Corregido para que coincida con la clave del objeto 'categories'
+                    if (altoValor && altoEsfuerzo) return "Iniciativas Estratégicas"; 
+                    if (!altoValor && !altoEsfuerzo) return "Proyectos Complementarios";
+                    return "Agujeros Negros";
+                }
+
+                const colorScale = d3.scaleOrdinal()
+                    .domain(Object.keys(categories))
+                    .range(Object.values(categories).map(c => c.color));
+
+                const xScale = d3.scaleLinear()
+                    .domain([0, d3.max(cleanData, d => d["L. RECURSOS INVERTIDOS"]) * 1.05])
+                    .range([0, innerWidth]);
+
+                const yScale = d3.scaleLinear()
+                    .domain([d3.min(cleanData, d => d["ROI POTENCIAL"])*0.9 , d3.max(cleanData, d => d["ROI POTENCIAL"]) * 1.05])
+                    .range([innerHeight, 0]);
+                
+                // --- Ejes y Grillas ---
+                const xAxis = d3.axisBottom(xScale).ticks(5).tickSize(-innerHeight);
+                const yAxis = d3.axisLeft(yScale).ticks(5).tickSize(-innerWidth);
+
+                g.append("g").attr("class", "axis").attr("transform", `translate(0, ${innerHeight})`).call(xAxis)
+                    .call(g => g.selectAll(".tick line").attr("class", "grid-line"));
+                g.append("g").attr("class", "axis").call(yAxis)
+                    .call(g => g.selectAll(".tick line").attr("class", "grid-line"));
+                g.selectAll(".domain").remove();
+
+                // --- Cuadrantes ---
+                const quadrants = g.append("g").attr("class", "quadrants");
+                quadrants.append("rect").attr("class", "quadrant-bg").attr("x", 0).attr("y", 0).attr("width", xScale(medianEsfuerzo)).attr("height", yScale(medianValor)).attr("fill", categories["Quick Wins"].bg).style("opacity", 0);
+                quadrants.append("rect").attr("class", "quadrant-bg").attr("x", xScale(medianEsfuerzo)).attr("y", 0).attr("width", innerWidth - xScale(medianEsfuerzo)).attr("height", yScale(medianValor)).attr("fill", categories["Iniciativas Estratégicas"].bg).style("opacity", 0);
+                quadrants.append("rect").attr("class", "quadrant-bg").attr("x", 0).attr("y", yScale(medianValor)).attr("width", xScale(medianEsfuerzo)).attr("height", innerHeight - yScale(medianValor)).attr("fill", categories["Proyectos Complementarios"].bg).style("opacity", 0);
+                quadrants.append("rect").attr("class", "quadrant-bg").attr("x", xScale(medianEsfuerzo)).attr("y", yScale(medianValor)).attr("width", innerWidth - xScale(medianEsfuerzo)).attr("height", innerHeight - yScale(medianValor)).attr("fill", categories["Agujeros Negros"].bg).style("opacity", 0);
+                
+                quadrants.append("text").attr("class", "quadrant-label").attr("x", xScale(medianEsfuerzo)/2).attr("y", 20).text("Quick Wins").style("opacity", 0);
+                quadrants.append("text").attr("class", "quadrant-label").attr("x", xScale(medianEsfuerzo) + (innerWidth-xScale(medianEsfuerzo))/2).attr("y", 20).text("Iniciativas Estratégicas").style("opacity", 0);
+                
+                // --- Líneas Medianas ---
+                g.append("line").attr("x1", xScale(medianEsfuerzo)).attr("x2", xScale(medianEsfuerzo)).attr("y1", 0).attr("y2", innerHeight).attr("stroke", "#9ca3af").attr("stroke-width", 1.5).attr("stroke-dasharray", "4");
+                g.append("line").attr("x1", 0).attr("x2", innerWidth).attr("y1", yScale(medianValor)).attr("y2", yScale(medianValor)).attr("stroke", "#9ca3af").attr("stroke-width", 1.5).attr("stroke-dasharray", "4");
+
+                // --- Títulos de Ejes ---
+                svg.append("text").attr("x", margin.left + innerWidth / 2).attr("y", height - 10).attr("text-anchor", "middle").style("font-size", "14px").style("font-weight", "600").attr("fill", "#4B5563").text("Esfuerzo (Recursos Invertidos)");
+                svg.append("text").attr("transform", "rotate(-90)").attr("y", 15).attr("x", -(margin.top + innerHeight / 2)).attr("text-anchor", "middle").style("font-size", "14px").style("font-weight", "600").attr("fill", "#4B5563").text("Impacto");
+                
+                // --- Puntos de Datos ---
+                g.selectAll("circle.data-point")
+                    .data(cleanData)
+                    .enter()
+                    .append("circle")
+                    .attr("class", d => `data-point ${getProjectCategory(d).replace(/\s+/g, '-')}`)
+                    .attr("id", d => `point-${d.cod}`)
+                    .attr("cx", d => xScale(d["L. RECURSOS INVERTIDOS"]))
+                    .attr("cy", d => yScale(d["ROI POTENCIAL"]))
+                    .attr("r", 6)
+                    .attr("fill", d => colorScale(getProjectCategory(d)))
+                    .attr("opacity", 0)
+                    .attr("stroke", "#fff")
+                    .attr("stroke-width", 1.5)
+                    .style("cursor", "pointer")
+                    .on("mouseover", function(event, d) {
+                         d3.select(this).transition().duration(200).attr("r", 9);
+                         tooltip.transition().duration(200).style("opacity", .95);
+                         const category = getProjectCategory(d);
+                         tooltip.html(`
+                             <div class="tooltip-title">${d.título}</div>
+                             <div class="tooltip-item"><span class="tooltip-label">Código:</span> ${d.cod}</div>
+                             <hr class="my-1 border-gray-200">
+                             <div class="tooltip-item"><span class="tooltip-label">Categoría:</span> <span style="color:${colorScale(category)}; font-weight:bold;">${category}</span></div>
+                             <div class="tooltip-item"><span class="tooltip-label">Impacto (ROI):</span> ${d["ROI POTENCIAL"].toFixed(2)}</div>
+                             <div class="tooltip-item"><span class="tooltip-label">Esfuerzo:</span> ${d["L. RECURSOS INVERTIDOS"].toFixed(0)}</div>
+                         `);
+                     })
+                    .on("mousemove", (event) => {
+                        tooltip.style("left", (event.pageX + 15) + "px").style("top", (event.pageY - 28) + "px");
+                    })
+                    .on("mouseout", function() {
+                        if (!d3.select(this).classed("highlight")) {
+                            d3.select(this).transition().duration(200).attr("r", 6);
+                        }
+                        tooltip.transition().duration(500).style("opacity", 0);
+                    });
+
+                // --- Leyenda ---
+                const legend = svg.append("g").attr("transform", `translate(${margin.left + innerWidth + 30}, ${margin.top})`);
+                const legendItems = legend.selectAll(".legend-item").data(colorScale.domain()).enter().append("g")
+                    .attr("class", "legend-item")
+                    .attr("transform", (d, i) => `translate(0, ${i * 25})`)
+                    .on("click", function(event, d) {
+                        const isUnfocused = d3.select(this).classed("unfocused");
+                        legendItems.classed("unfocused", !isUnfocused);
+                        d3.select(this).classed("unfocused", false);
+
+                        if(isUnfocused) {
+                           g.selectAll("circle.data-point").classed("unfocused", false);
+                        } else {
+                           g.selectAll("circle.data-point").classed("unfocused", true);
+                           g.selectAll(`circle.${d.replace(/\s+/g, '-')}`).classed("unfocused", false);
+                        }
+                    });
+
+                legendItems.append("rect").attr("x", 0).attr("y", 0).attr("width", 15).attr("height", 15).style("fill", colorScale).attr("rx", 3);
+                legendItems.append("text").attr("x", 22).attr("y", 12).text(d => categories[d].label).style("font-size", "14px").attr("text-anchor", "start").attr("fill", "#374151");
+            };
+
+            const updateScene4Animation = () => {
+                scene4Elements.narrativeStep1.classList.toggle('visible', scene4Step === 1);
+                scene4Elements.narrativeStep2.classList.toggle('visible', scene4Step === 2);
+                scene4Elements.narrativeStep3.classList.toggle('visible', scene4Step === 3);
+                scene4Elements.narrativeStep4.classList.toggle('visible', scene4Step === 4);
+                
+                if (scene4Elements.chartContainer) {
+                    scene4Elements.chartContainer.style.opacity = scene4Step >= 1 ? '1' : '0';
+                }
+
+                const chart = d3.select("#chart");
+                chart.selectAll(".quadrant-bg, .quadrant-label").transition().duration(800).style("opacity", scene4Step >= 2 ? 1 : 0);
+                
+                if (scene4Step >= 3) {
+                    chart.selectAll("circle.data-point")
+                        .transition().duration(1000).delay((d,i) => i * 15).attr("opacity", 0.8);
+                } else {
+                    chart.selectAll("circle.data-point").attr("opacity", 0);
+                }
+                
+                chart.select("#point-uim0041").classed("highlight", scene4Step === 3);
+            };
+            
+            const navigateToScene = (index) => {
+                if (index >= 0 && index < scenes.length && !isScrolling) {
+                    isScrolling = true;
+                    currentSceneIndex = index;
+                    scenes[currentSceneIndex].scrollIntoView({ behavior: 'smooth' });
+                    setTimeout(() => { isScrolling = false; }, 1000);
+                }
+            };
+            
+            menuItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    navigateToScene(parseInt(item.dataset.sceneIndex));
+                });
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (isScrolling) return;
+
+                if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    if (currentSceneIndex === 1 && scene2Step < scene2TotalSteps) { scene2Step++; updateScene2Animation(); }
+                    else if (currentSceneIndex === 2 && scene3Step < scene3TotalSteps) { scene3Step++; updateScene3Animation(); }
+                    else if (currentSceneIndex === 3 && scene4Step < scene4TotalSteps) { scene4Step++; updateScene4Animation(); }
+                    else { navigateToScene(currentSceneIndex + 1); }
+                } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    if (currentSceneIndex === 1 && scene2Step > 0) { scene2Step--; updateScene2Animation(); }
+                    else if (currentSceneIndex === 2 && scene3Step > 0) { scene3Step--; updateScene3Animation(); }
+                    else if (currentSceneIndex === 3 && scene4Step > 0) { scene4Step--; updateScene4Animation(); }
+                    else { navigateToScene(currentSceneIndex - 1); }
+                }
+            });
+
+            // Navegación por scroll en móvil
+            let lastScrollTime = 0;
+            document.addEventListener('wheel', (event) => {
+                if (window.innerWidth >= 768) return; // Aplicar solo en pantallas tipo móvil
+
+                const now = new Date().getTime();
+                if (now - lastScrollTime < 500) { // Throttle para evitar saltos rápidos
+                    event.preventDefault();
+                    return;
+                }
+
+                if (event.deltaY > 10) { // Scroll hacia abajo
+                    event.preventDefault();
+                    lastScrollTime = now;
+                    if (currentSceneIndex === 1 && scene2Step < scene2TotalSteps) { scene2Step++; updateScene2Animation(); }
+                    else if (currentSceneIndex === 2 && scene3Step < scene3TotalSteps) { scene3Step++; updateScene3Animation(); }
+                    else if (currentSceneIndex === 3 && scene4Step < scene4TotalSteps) { scene4Step++; updateScene4Animation(); }
+                    else { navigateToScene(currentSceneIndex + 1); }
+                } else if (event.deltaY < -10) { // Scroll hacia arriba
+                    event.preventDefault();
+                    lastScrollTime = now;
+                    if (currentSceneIndex === 1 && scene2Step > 0) { scene2Step--; updateScene2Animation(); }
+                    else if (currentSceneIndex === 2 && scene3Step > 0) { scene3Step--; updateScene3Animation(); }
+                    else if (currentSceneIndex === 3 && scene4Step > 0) { scene4Step--; updateScene4Animation(); }
+                    else { navigateToScene(currentSceneIndex - 1); }
+                }
+            }, { passive: false });
+
+            const scrollSyncObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const index = Array.from(scenes).indexOf(entry.target);
+                        if (index !== -1) {
+                            currentSceneIndex = index;
+                            progressHeader.classList.toggle('opacity-0', currentSceneIndex === 0);
+                            
+                            // Resetear animaciones de escenas no activas
+                            if (currentSceneIndex !== 1 && scene2Step > 0) { scene2Step = 0; updateScene2Animation(); }
+                            if (currentSceneIndex !== 2 && scene3Step > 0) { scene3Step = 0; updateScene3Animation(); }
+                            if (currentSceneIndex !== 3 && scene4Step > 0) { scene4Step = 0; updateScene4Animation(); }
+
+                            menuItems.forEach(item => {
+                                item.classList.toggle('active', parseInt(item.dataset.sceneIndex) === currentSceneIndex);
+                            });
+                        }
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            scenes.forEach(scene => scrollSyncObserver.observe(scene));
+
+            // Render inicial del gráfico y listener de redimensionamiento
+            renderD3Chart();
+            window.addEventListener('resize', renderD3Chart);
+        });
+    </script>
+
+</body>
+</html>
+
