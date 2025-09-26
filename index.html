@@ -330,7 +330,7 @@
                     </div>
                 </div>
             </div>
-            <div class="absolute bottom-8 right-8 text-center">
+            <div class="mt-8 md:absolute md:bottom-8 md:right-8 text-center">
                 <img src="https://i.ibb.co/fYY6btBp/qr-estudios.png" alt="Código QR para ver detalle de estudios" class="w-24 h-24 mx-auto rounded-lg shadow-lg">
                 <p class="text-xs mt-2 font-semibold text-gray-700">ver detalle de estudios y proyectos</p>
             </div>
@@ -370,7 +370,7 @@
                     </div>
                 </div>
             </div>
-            <div class="absolute bottom-8 right-8 text-center">
+            <div class="mt-8 md:absolute md:bottom-8 md:right-8 text-center">
                 <img src="https://i.ibb.co/jkRNdVRw/Dise-o-sin-t-tulo.png" alt="Código QR para la metodología" class="w-24 h-24 mx-auto rounded-lg shadow-lg">
                 <p class="text-xs mt-2 font-semibold text-gray-700">para saber más sobre la metodología consulta acá</p>
             </div>
@@ -392,7 +392,7 @@
 
                     <!-- Objetivo Central -->
                     <div class="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-lg z-10">
-                        <h3 class="text-lg font-bold text-gray-700">Implementación Nueva Ley N° 19.886</h3>
+                        <h3 class="text-lg font-bold text-gray-700">Continuar con la Implementación Nueva Ley N° 21.634</h3>
                     </div>
 
                     <!-- Conectores a Pilares -->
@@ -688,7 +688,7 @@
                 svg.append("text").attr("transform", "rotate(-90)").attr("y", 15).attr("x", -(margin.top + innerHeight / 2)).attr("text-anchor", "middle").style("font-size", "14px").style("font-weight", "600").attr("fill", "#4B5563").text("Impacto");
                 
                 // --- Puntos de Datos ---
-                g.selectAll("circle.data-point")
+                const points = g.selectAll("circle.data-point")
                     .data(cleanData)
                     .enter()
                     .append("circle")
@@ -701,28 +701,68 @@
                     .attr("opacity", 0)
                     .attr("stroke", "#fff")
                     .attr("stroke-width", 1.5)
-                    .style("cursor", "pointer")
-                    .on("mouseover", function(event, d) {
-                         d3.select(this).transition().duration(200).attr("r", 9);
-                         tooltip.transition().duration(200).style("opacity", .95);
-                         const category = getProjectCategory(d);
-                         tooltip.html(`
-                             <div class="tooltip-title">${d.título}</div>
-                             <div class="tooltip-item"><span class="tooltip-label">Código:</span> ${d.cod}</div>
-                             <hr class="my-1 border-gray-200">
-                             <div class="tooltip-item"><span class="tooltip-label">Categoría:</span> <span style="color:${colorScale(category)}; font-weight:bold;">${category}</span></div>
-                             <div class="tooltip-item"><span class="tooltip-label">Impacto (ROI):</span> ${d["ROI POTENCIAL"].toFixed(2)}</div>
-                             <div class="tooltip-item"><span class="tooltip-label">Esfuerzo:</span> ${d["L. RECURSOS INVERTIDOS"].toFixed(0)}</div>
-                         `);
-                     })
-                    .on("mousemove", (event) => {
+                    .style("cursor", "pointer");
+
+                // --- Lógica de Tooltip con Voronoi para evitar superposición ---
+                const delaunay = d3.Delaunay.from(cleanData, d => xScale(d["L. RECURSOS INVERTIDOS"]), d => yScale(d["ROI POTENCIAL"]));
+                let activeIndex = null;
+                let pinnedIndex = null;
+
+                function showTooltip(event, index) {
+                    if (index === null) return;
+                    activeIndex = index;
+                    const d = cleanData[index];
+                    
+                    points.classed("highlight", false).transition().duration(200).attr("r", 6);
+                    d3.select(points.nodes()[index]).classed("highlight", true).transition().duration(200).attr("r", 9);
+
+                    tooltip.transition().duration(200).style("opacity", .95);
+                    const category = getProjectCategory(d);
+                    tooltip.html(`
+                        <div class="tooltip-title">${d.título}</div>
+                        <div class="tooltip-item"><span class="tooltip-label">Código:</span> ${d.cod}</div>
+                        <hr class="my-1 border-gray-200">
+                        <div class="tooltip-item"><span class="tooltip-label">Categoría:</span> <span style="color:${colorScale(category)}; font-weight:bold;">${category}</span></div>
+                        <div class="tooltip-item"><span class="tooltip-label">Impacto (ROI):</span> ${d["ROI POTENCIAL"].toFixed(2)}</div>
+                        <div class="tooltip-item"><span class="tooltip-label">Esfuerzo:</span> ${d["L. RECURSOS INVERTIDOS"].toFixed(0)}</div>
+                    `);
+                    tooltip.style("left", (event.pageX + 15) + "px").style("top", (event.pageY - 28) + "px");
+                }
+
+                function hideTooltip() {
+                    activeIndex = null;
+                    points.classed("highlight", false).transition().duration(200).attr("r", 6);
+                    tooltip.transition().duration(500).style("opacity", 0);
+                }
+
+                g.append("rect")
+                    .attr("width", innerWidth)
+                    .attr("height", innerHeight)
+                    .style("fill", "none")
+                    .style("pointer-events", "all")
+                    .on("mousemove", event => {
+                        if (pinnedIndex !== null) return;
+                        const [mx, my] = d3.pointer(event);
+                        const index = delaunay.find(mx, my);
+                        if (activeIndex !== index) {
+                            showTooltip(event, index);
+                        }
                         tooltip.style("left", (event.pageX + 15) + "px").style("top", (event.pageY - 28) + "px");
                     })
-                    .on("mouseout", function() {
-                        if (!d3.select(this).classed("highlight")) {
-                            d3.select(this).transition().duration(200).attr("r", 6);
+                    .on("mouseleave", () => {
+                        if (pinnedIndex !== null) return;
+                        hideTooltip();
+                    })
+                    .on("click", event => {
+                        const [mx, my] = d3.pointer(event);
+                        const index = delaunay.find(mx, my);
+                        if (pinnedIndex === index) {
+                            pinnedIndex = null;
+                            hideTooltip();
+                        } else {
+                            pinnedIndex = index;
+                            showTooltip(event, index);
                         }
-                        tooltip.transition().duration(500).style("opacity", 0);
                     });
 
                 // --- Leyenda ---
@@ -750,7 +790,9 @@
             const updateScene4Animation = () => {
                 // Step 1: Show chaos
                 if (scene4Elements.chaosContainer) {
-                    scene4Elements.chaosContainer.style.opacity = scene4Step === 1 ? '1' : '0';
+                    const isChaosVisible = scene4Step === 1;
+                    scene4Elements.chaosContainer.style.opacity = isChaosVisible ? '1' : '0';
+                    scene4Elements.chaosContainer.style.pointerEvents = isChaosVisible ? 'auto' : 'none';
                 }
                 scene4Elements.narrativeChaos.classList.toggle('visible', scene4Step === 1);
 
@@ -851,10 +893,7 @@
                             currentSceneIndex = index;
                             progressHeader.classList.toggle('opacity-0', currentSceneIndex === 0);
                             
-                            // Resetear animaciones de escenas no activas
-                            if (currentSceneIndex !== 1 && scene2Step > 0) { scene2Step = 0; updateScene2Animation(); }
-                            if (currentSceneIndex !== 2 && scene3Step > 0) { scene3Step = 0; updateScene3Animation(); }
-                            if (currentSceneIndex !== 3 && scene4Step > 0) { scene4Step = 0; updateScene4Animation(); }
+                            // Las animaciones de las escenas ahora persisten al navegar entre ellas.
 
                             menuItems.forEach(item => {
                                 item.classList.toggle('active', parseInt(item.dataset.sceneIndex) === currentSceneIndex);
