@@ -458,7 +458,8 @@
             </div>
         </section>
 
-    </main><div id="tooltip" class="tooltip"></div>
+    </main>
+    <div id="tooltip" class="tooltip"></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -546,7 +547,7 @@
             let isScrolling = false;
             
             let scene2Step = 0, scene3Step = 0, scene4Step = 0;
-            const scene2TotalSteps = 5, scene3TotalSteps = 4, scene4TotalSteps = 5; // Updated scene4TotalSteps
+            const scene2TotalSteps = 5, scene3TotalSteps = 4, scene4TotalSteps = 5;
 
             const progressHeader = document.getElementById('progress-header');
             const menuItems = document.querySelectorAll('.menu-item');
@@ -641,7 +642,6 @@
                     const altoValor = d["ROI POTENCIAL"] >= medianValor;
                     const altoEsfuerzo = d["L. RECURSOS INVERTIDOS"] >= medianEsfuerzo;
                     if (altoValor && !altoEsfuerzo) return "Quick Wins";
-                    // Corregido para que coincida con la clave del objeto 'categories'
                     if (altoValor && altoEsfuerzo) return "Iniciativas Estratégicas"; 
                     if (!altoValor && !altoEsfuerzo) return "Proyectos Complementarios";
                     return "Agujeros Negros";
@@ -659,7 +659,6 @@
                     .domain([d3.min(cleanData, d => d["ROI POTENCIAL"])*0.9 , d3.max(cleanData, d => d["ROI POTENCIAL"]) * 1.05])
                     .range([innerHeight, 0]);
                 
-                // --- Ejes y Grillas ---
                 const xAxis = d3.axisBottom(xScale).ticks(5).tickSize(-innerHeight);
                 const yAxis = d3.axisLeft(yScale).ticks(5).tickSize(-innerWidth);
 
@@ -669,7 +668,6 @@
                     .call(g => g.selectAll(".tick line").attr("class", "grid-line"));
                 g.selectAll(".domain").remove();
 
-                // --- Cuadrantes ---
                 const quadrants = g.append("g").attr("class", "quadrants");
                 quadrants.append("rect").attr("class", "quadrant-bg").attr("x", 0).attr("y", 0).attr("width", xScale(medianEsfuerzo)).attr("height", yScale(medianValor)).attr("fill", categories["Quick Wins"].bg).style("opacity", 0);
                 quadrants.append("rect").attr("class", "quadrant-bg").attr("x", xScale(medianEsfuerzo)).attr("y", 0).attr("width", innerWidth - xScale(medianEsfuerzo)).attr("height", yScale(medianValor)).attr("fill", categories["Iniciativas Estratégicas"].bg).style("opacity", 0);
@@ -679,15 +677,12 @@
                 quadrants.append("text").attr("class", "quadrant-label").attr("x", xScale(medianEsfuerzo)/2).attr("y", 20).text("Quick Wins").style("opacity", 0);
                 quadrants.append("text").attr("class", "quadrant-label").attr("x", xScale(medianEsfuerzo) + (innerWidth-xScale(medianEsfuerzo))/2).attr("y", 20).text("Iniciativas Estratégicas").style("opacity", 0);
                 
-                // --- Líneas Medianas ---
                 g.append("line").attr("x1", xScale(medianEsfuerzo)).attr("x2", xScale(medianEsfuerzo)).attr("y1", 0).attr("y2", innerHeight).attr("stroke", "#9ca3af").attr("stroke-width", 1.5).attr("stroke-dasharray", "4");
                 g.append("line").attr("x1", 0).attr("x2", innerWidth).attr("y1", yScale(medianValor)).attr("y2", yScale(medianValor)).attr("stroke", "#9ca3af").attr("stroke-width", 1.5).attr("stroke-dasharray", "4");
 
-                // --- Títulos de Ejes ---
                 svg.append("text").attr("x", margin.left + innerWidth / 2).attr("y", height - 10).attr("text-anchor", "middle").style("font-size", "14px").style("font-weight", "600").attr("fill", "#4B5563").text("Esfuerzo (Recursos Invertidos)");
                 svg.append("text").attr("transform", "rotate(-90)").attr("y", 15).attr("x", -(margin.top + innerHeight / 2)).attr("text-anchor", "middle").style("font-size", "14px").style("font-weight", "600").attr("fill", "#4B5563").text("Impacto");
                 
-                // --- Puntos de Datos ---
                 const points = g.selectAll("circle.data-point")
                     .data(cleanData)
                     .enter()
@@ -703,7 +698,6 @@
                     .attr("stroke-width", 1.5)
                     .style("cursor", "pointer");
 
-                // --- Lógica de Tooltip con Voronoi para evitar superposición ---
                 const delaunay = d3.Delaunay.from(cleanData, d => xScale(d["L. RECURSOS INVERTIDOS"]), d => yScale(d["ROI POTENCIAL"]));
                 let activeIndex = null;
                 let pinnedIndex = null;
@@ -765,7 +759,6 @@
                         }
                     });
 
-                // --- Leyenda ---
                 const legend = svg.append("g").attr("transform", `translate(${margin.left + innerWidth + 30}, ${margin.top})`);
                 const legendItems = legend.selectAll(".legend-item").data(colorScale.domain()).enter().append("g")
                     .attr("class", "legend-item")
@@ -788,7 +781,6 @@
             };
 
             const updateScene4Animation = () => {
-                // Step 1: Show chaos
                 if (scene4Elements.chaosContainer) {
                     const isChaosVisible = scene4Step === 1;
                     scene4Elements.chaosContainer.style.opacity = isChaosVisible ? '1' : '0';
@@ -796,18 +788,15 @@
                 }
                 scene4Elements.narrativeChaos.classList.toggle('visible', scene4Step === 1);
 
-                // Step 2: Transition to solution
                 if (scene4Elements.chartContainer) {
                     scene4Elements.chartContainer.style.opacity = scene4Step >= 2 ? '1' : '0';
                 }
                 scene4Elements.narrativeSolution.classList.toggle('visible', scene4Step === 2);
 
-                // Step 3: Explain quadrants
                 const chart = d3.select("#chart");
                 chart.selectAll(".quadrant-bg, .quadrant-label").transition().duration(800).style("opacity", scene4Step >= 3 ? 1 : 0);
                 scene4Elements.narrativeQuadrants.classList.toggle('visible', scene4Step === 3);
                 
-                // Step 4: Show portfolio
                 if (scene4Step >= 4) {
                     chart.selectAll("circle.data-point")
                         .transition().duration(1000).delay((d,i) => i * 15).attr("opacity", 0.8);
@@ -817,7 +806,6 @@
                 chart.select("#point-uim0041").classed("highlight", scene4Step === 4);
                 scene4Elements.narrativePortfolio.classList.toggle('visible', scene4Step === 4);
 
-                // Step 5: Leadership statement
                 scene4Elements.narrativeLeadership.classList.toggle('visible', scene4Step === 5);
             };
             
@@ -836,16 +824,21 @@
                 });
             });
 
+            // --- MANEJADORES DE EVENTOS MEJORADOS PARA PUNTERO REMOTO ---
+
             document.addEventListener('keydown', (event) => {
                 if (isScrolling) return;
 
-                if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+                // Avanzar con Flecha Derecha, Abajo, Avance de Página o Espacio
+                if (event.key === 'ArrowRight' || event.key === 'ArrowDown' || event.key === 'PageDown' || event.key === ' ') {
                     event.preventDefault();
                     if (currentSceneIndex === 1 && scene2Step < scene2TotalSteps) { scene2Step++; updateScene2Animation(); }
                     else if (currentSceneIndex === 2 && scene3Step < scene3TotalSteps) { scene3Step++; updateScene3Animation(); }
                     else if (currentSceneIndex === 3 && scene4Step < scene4TotalSteps) { scene4Step++; updateScene4Animation(); }
                     else { navigateToScene(currentSceneIndex + 1); }
-                } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+                } 
+                // Retroceder con Flecha Izquierda, Arriba o Retroceso de Página
+                else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp' || event.key === 'PageUp') {
                     event.preventDefault();
                     if (currentSceneIndex === 1 && scene2Step > 0) { scene2Step--; updateScene2Animation(); }
                     else if (currentSceneIndex === 2 && scene3Step > 0) { scene3Step--; updateScene3Animation(); }
@@ -854,30 +847,30 @@
                 }
             });
 
-            // Navegación por toque en móvil
+            // Navegación por clic en cualquier dispositivo (izquierda/derecha)
             let lastTapTime = 0;
             document.addEventListener('click', (event) => {
-                if (window.innerWidth >= 768) return; // Aplicar solo en pantallas tipo móvil
-
-                // Ignorar clicks en elementos interactivos como la leyenda o botones
-                if (event.target.closest('.legend-item, button')) {
+                // Ignorar clics en elementos que ya tienen una función (botones, leyenda, links, etc.)
+                if (event.target.closest('button, .legend-item, a')) {
                     return;
                 }
 
                 const now = new Date().getTime();
-                if (now - lastTapTime < 400) { // Throttle para evitar doble taps
+                if (now - lastTapTime < 300) { // Previene dobles clics accidentales
                     event.preventDefault();
                     return;
                 }
                 lastTapTime = now;
                 
-                // Avanzar al tocar en la mitad derecha, retroceder en la izquierda
+                // Lógica para avanzar o retroceder según la posición del clic
                 if (event.clientX > window.innerWidth / 2) {
+                    // Clic en la mitad derecha -> Avanzar
                     if (currentSceneIndex === 1 && scene2Step < scene2TotalSteps) { scene2Step++; updateScene2Animation(); }
                     else if (currentSceneIndex === 2 && scene3Step < scene3TotalSteps) { scene3Step++; updateScene3Animation(); }
                     else if (currentSceneIndex === 3 && scene4Step < scene4TotalSteps) { scene4Step++; updateScene4Animation(); }
                     else { navigateToScene(currentSceneIndex + 1); }
                 } else {
+                    // Clic en la mitad izquierda -> Retroceder
                     if (currentSceneIndex === 1 && scene2Step > 0) { scene2Step--; updateScene2Animation(); }
                     else if (currentSceneIndex === 2 && scene3Step > 0) { scene3Step--; updateScene3Animation(); }
                     else if (currentSceneIndex === 3 && scene4Step > 0) { scene4Step--; updateScene4Animation(); }
@@ -893,8 +886,6 @@
                             currentSceneIndex = index;
                             progressHeader.classList.toggle('opacity-0', currentSceneIndex === 0);
                             
-                            // Las animaciones de las escenas ahora persisten al navegar entre ellas.
-
                             menuItems.forEach(item => {
                                 item.classList.toggle('active', parseInt(item.dataset.sceneIndex) === currentSceneIndex);
                             });
@@ -905,7 +896,6 @@
 
             scenes.forEach(scene => scrollSyncObserver.observe(scene));
 
-            // Render inicial del gráfico y listener de redimensionamiento
             renderD3Chart();
             window.addEventListener('resize', renderD3Chart);
         });
@@ -913,7 +903,3 @@
 
 </body>
 </html>
-
-
-
-
